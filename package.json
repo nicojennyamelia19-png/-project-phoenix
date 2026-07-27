@@ -1,0 +1,49 @@
+{
+  "name": "project-phoenix-desktop",
+  "version": "3.1.0",
+  "description": "Project Phoenix, suivi sportif et nutritionnel sur Windows",
+  "main": "desktop-main.cjs",
+  "author": "Nicolas Fontaine",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build:windows": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^37.2.4",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.nicolasfontaine.projectphoenix.desktop",
+    "productName": "Project Phoenix",
+    "asar": true,
+    "directories": {
+      "output": "dist-windows"
+    },
+    "files": [
+      "index.html",
+      "manifest.webmanifest",
+      "sw.js",
+      "icon.svg",
+      "desktop-main.cjs",
+      "desktop-preload.cjs"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "Project-Phoenix-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Project Phoenix"
+    }
+  }
+}
