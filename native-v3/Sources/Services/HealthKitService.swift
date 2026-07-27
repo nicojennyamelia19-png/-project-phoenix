@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 import HealthKit
 import CoreLocation
 
@@ -32,20 +33,7 @@ final class HealthKitService: ObservableObject {
             statusMessage = "Apple Santé n’est pas disponible sur cet appareil."
             return
         }
-
-        let readTypes: Set<HKObjectType> = [
-            HKObjectType.workoutType(),
-            HKSeriesType.workoutRoute(),
-            stepType,
-            energyType,
-            distanceType,
-            heartRateType,
-            restingHeartRateType,
-            vo2MaxType,
-            bodyMassType,
-            sleepType
-        ]
-
+        let readTypes: Set<HKObjectType> = [HKObjectType.workoutType(), HKSeriesType.workoutRoute(), stepType, energyType, distanceType, heartRateType, restingHeartRateType, vo2MaxType, bodyMassType, sleepType]
         do {
             try await store.requestAuthorization(toShare: [], read: readTypes)
             isAuthorized = true
@@ -66,7 +54,6 @@ final class HealthKitService: ObservableObject {
             async let sleepResult = querySleepHours()
             async let restingResult = latestQuantity(type: restingHeartRateType, unit: HKUnit.count().unitDivided(by: .minute()))
             async let vo2Result = latestQuantity(type: vo2MaxType, unit: HKUnit(from: "ml/kg*min"))
-
             let (newWorkouts, steps, energy, sleep, resting, vo2) = try await (workoutsResult, stepsResult, energyResult, sleepResult, restingResult, vo2Result)
             workouts = newWorkouts
             stepsToday = steps
@@ -103,11 +90,7 @@ final class HealthKitService: ObservableObject {
     private func enableWorkoutUpdates() {
         let workoutType = HKObjectType.workoutType()
         store.enableBackgroundDelivery(for: workoutType, frequency: .immediate) { _, _ in }
-
-        if let observerQuery {
-            store.stop(observerQuery)
-        }
-
+        if let observerQuery { store.stop(observerQuery) }
         let query = HKObserverQuery(sampleType: workoutType, predicate: nil) { [weak self] _, completion, _ in
             Task { @MainActor in
                 await self?.refreshAll()
@@ -122,20 +105,15 @@ final class HealthKitService: ObservableObject {
         let distanceType = self.distanceType
         let energyType = self.energyType
         let heartRateType = self.heartRateType
-
         return try await withCheckedThrowingContinuation { continuation in
             let start = Calendar.current.date(byAdding: .month, value: -6, to: .now)!
             let predicate = HKQuery.predicateForSamples(withStart: start, end: .now, options: .strictEndDate)
             let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
             let query = HKSampleQuery(sampleType: HKObjectType.workoutType(), predicate: predicate, limit: 250, sortDescriptors: [sort]) { [weak self] _, samples, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                    return
-                }
+                if let error { continuation.resume(throwing: error); return }
                 let hkWorkouts = (samples as? [HKWorkout]) ?? []
                 var summaries: [WorkoutSummary] = []
                 var lookup: [UUID: HKWorkout] = [:]
-
                 for workout in hkWorkouts {
                     lookup[workout.uuid] = workout
                     let distance = workout.statistics(for: distanceType)?.sumQuantity()?.doubleValue(for: .meterUnit(with: .kilo)) ?? 0
@@ -143,20 +121,8 @@ final class HealthKitService: ObservableObject {
                     let averageHR = workout.statistics(for: heartRateType)?.averageQuantity()?.doubleValue(for: HKUnit.count().unitDivided(by: .minute()))
                     let source = workout.sourceRevision.source.name
                     let normalized = source.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
-                    summaries.append(WorkoutSummary(
-                        id: workout.uuid,
-                        healthKitUUID: workout.uuid,
-                        activityName: Self.activityName(workout.workoutActivityType),
-                        startDate: workout.startDate,
-                        duration: workout.duration,
-                        distanceKm: distance,
-                        activeKilocalories: calories,
-                        averageHeartRate: averageHR,
-                        sourceName: source,
-                        isFromAdidas: normalized.contains("adidas") || normalized.contains("runtastic")
-                    ))
+                    summaries.append(WorkoutSummary(id: workout.uuid, healthKitUUID: workout.uuid, activityName: Self.activityName(workout.workoutActivityType), startDate: workout.startDate, duration: workout.duration, distanceKm: distance, activeKilocalories: calories, averageHeartRate: averageHR, sourceName: source, isFromAdidas: normalized.contains("adidas") || normalized.contains("runtastic")))
                 }
-
                 Task { @MainActor in self?.healthWorkouts = lookup }
                 continuation.resume(returning: summaries)
             }
@@ -213,25 +179,17 @@ final class HealthKitService: ObservableObject {
             }
             store.execute(query)
         }
-
         guard let route = routeSamples.first else { return [] }
         return try await withCheckedThrowingContinuation { continuation in
             var all: [RoutePoint] = []
             var finished = false
             let query = HKWorkoutRouteQuery(route: route) { _, locations, done, error in
                 guard !finished else { return }
-                if let error {
-                    finished = true
-                    continuation.resume(throwing: error)
-                    return
-                }
+                if let error { finished = true; continuation.resume(throwing: error); return }
                 for location in locations ?? [] {
                     all.append(RoutePoint(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude, altitude: location.altitude, timestamp: location.timestamp))
                 }
-                if done {
-                    finished = true
-                    continuation.resume(returning: all)
-                }
+                if done { finished = true; continuation.resume(returning: all) }
             }
             store.execute(query)
         }
