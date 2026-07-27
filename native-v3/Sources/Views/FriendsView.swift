@@ -21,7 +21,7 @@ struct FriendsView: View {
                             .foregroundStyle(.secondary)
                         Text(friends.inviteCode)
                             .font(.system(.largeTitle, design: .monospaced, weight: .black))
-                            .foregroundStyle(.phoenixGold)
+                            .foregroundStyle(Color.phoenixGold)
                             .textSelection(.enabled)
 
                         Button {
@@ -31,7 +31,7 @@ struct FriendsView: View {
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.borderedProminent)
-                        .tint(.phoenixOrange)
+                        .tint(Color.phoenixOrange)
                     }
                 }
 
@@ -64,7 +64,7 @@ struct FriendsView: View {
                                         Circle().fill(Color.phoenixOrange.opacity(0.25))
                                         Text(String(friend.nickname.prefix(1)).uppercased())
                                             .font(.title.bold())
-                                            .foregroundStyle(.phoenixOrange)
+                                            .foregroundStyle(Color.phoenixOrange)
                                     }
                                     .frame(width: 52, height: 52)
                                     VStack(alignment: .leading) {
