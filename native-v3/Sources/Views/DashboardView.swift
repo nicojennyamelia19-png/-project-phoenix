@@ -40,7 +40,7 @@ struct DashboardView: View {
             HStack(spacing: 16) {
                 ZStack {
                     Circle().fill(
-                        LinearGradient(colors: [.phoenixOrange, .phoenixGold], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        LinearGradient(colors: [Color.phoenixOrange, Color.phoenixGold], startPoint: .topLeading, endPoint: .bottomTrailing)
                     )
                     Image(systemName: "flame.fill")
                         .font(.system(size: 34, weight: .black))
@@ -52,7 +52,7 @@ struct DashboardView: View {
                     Text("MISSION DU JOUR")
                         .font(.caption.bold())
                         .tracking(1.4)
-                        .foregroundStyle(.phoenixGold)
+                        .foregroundStyle(Color.phoenixGold)
                     Text(plan.title)
                         .font(.title2.bold())
                     Text("Objectif : \(plan.targetMinutes) minutes")
@@ -88,7 +88,7 @@ struct DashboardView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.phoenixOrange)
+                .tint(Color.phoenixOrange)
                 .disabled(workoutKit.isWorking)
 
                 HStack {
@@ -120,7 +120,7 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Label("Détection automatique", systemImage: "checkmark.seal.fill")
                     .font(.headline)
-                    .foregroundStyle(health.todayMatchedWorkout == nil ? .secondary : .green)
+                    .foregroundStyle(health.todayMatchedWorkout == nil ? Color.gray : Color.green)
 
                 if let workout = health.todayMatchedWorkout {
                     Text("Séance du jour reconnue")
@@ -142,7 +142,7 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Label("Apple Santé", systemImage: health.isAuthorized ? "heart.circle.fill" : "heart.slash")
                     .font(.headline)
-                    .foregroundStyle(health.isAuthorized ? .green : .phoenixOrange)
+                    .foregroundStyle(health.isAuthorized ? Color.green : Color.phoenixOrange)
                 Text(health.statusMessage)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -151,7 +151,7 @@ struct DashboardView: View {
                         Task { await health.requestAuthorization() }
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(.phoenixOrange)
+                    .tint(Color.phoenixOrange)
                 }
             }
         }
