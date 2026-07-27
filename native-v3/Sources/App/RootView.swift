@@ -18,7 +18,7 @@ struct RootView: View {
             NavigationStack { SettingsView() }
                 .tabItem { Label("Réglages", systemImage: "gearshape.fill") }
         }
-        .tint(.phoenixOrange)
+        .tint(Color.phoenixOrange)
     }
 }
 
@@ -44,7 +44,7 @@ struct PhoenixCard<Content: View>: View {
                     .fill(Color.phoenixPanel)
                     .overlay(
                         RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .stroke(.white.opacity(0.07), lineWidth: 1)
+                            .stroke(Color.white.opacity(0.07), lineWidth: 1)
                     )
             )
     }
