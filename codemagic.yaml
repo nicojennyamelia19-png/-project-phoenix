@@ -1,0 +1,42 @@
+workflows:
+  phoenix-v3-testflight:
+    name: Project Phoenix V3 vers TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: project-phoenix-asc
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.nicolasfontaine.projectphoenix
+      vars:
+        XCODE_PROJECT: native-v3/ProjectPhoenixV3.xcodeproj
+        XCODE_SCHEME: ProjectPhoenixV3
+        BUNDLE_ID: com.nicolasfontaine.projectphoenix
+      xcode: latest
+    scripts:
+      - name: Installer XcodeGen
+        script: brew install xcodegen
+      - name: Générer le projet Xcode
+        script: |
+          cd native-v3
+          xcodegen generate
+      - name: Configurer la signature Apple
+        script: xcode-project use-profiles
+      - name: Régler le numéro de build
+        script: |
+          cd native-v3
+          agvtool new-version -all $BUILD_NUMBER
+      - name: Construire l’IPA
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        expire_build_submitted_for_review: false
