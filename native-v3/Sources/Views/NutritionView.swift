@@ -17,15 +17,15 @@ struct NutritionView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Label("Hydratation", systemImage: "drop.fill")
                             .font(.headline)
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(Color.blue)
                         Text("\(waterGlasses * 250) ml / 3 000 ml")
                             .font(.title.bold())
                         ProgressView(value: min(Double(waterGlasses) / 12, 1))
-                            .tint(.blue)
+                            .tint(Color.blue)
                         HStack {
                             Button("+ 250 ml") { waterGlasses = min(waterGlasses + 1, 20) }
                                 .buttonStyle(.borderedProminent)
-                                .tint(.blue)
+                                .tint(Color.blue)
                             Button("Réinitialiser") { waterGlasses = 0 }
                                 .buttonStyle(.bordered)
                         }
@@ -51,16 +51,16 @@ struct NutritionView: View {
 
                         VStack(alignment: .leading, spacing: 7) {
                             Label("½ \(vegetable)", systemImage: "leaf.fill")
-                                .foregroundStyle(.green)
+                                .foregroundStyle(Color.green)
                             Label("¼ \(protein)", systemImage: "bolt.heart.fill")
-                                .foregroundStyle(.phoenixOrange)
+                                .foregroundStyle(Color.phoenixOrange)
                             Label("¼ \(carb)", systemImage: "circle.hexagongrid.fill")
-                                .foregroundStyle(.phoenixGold)
+                                .foregroundStyle(Color.phoenixGold)
                         }
                         .font(.headline)
                         .padding()
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 16))
+                        .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 16))
                     }
                 }
 
@@ -83,7 +83,7 @@ struct NutritionView: View {
                                     VStack(alignment: .trailing) {
                                         Text("\(recipe.protein) g")
                                             .font(.headline)
-                                            .foregroundStyle(.phoenixOrange)
+                                            .foregroundStyle(Color.phoenixOrange)
                                         Text("protéines")
                                             .font(.caption2)
                                             .foregroundStyle(.secondary)
