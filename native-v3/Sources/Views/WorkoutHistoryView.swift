@@ -41,7 +41,7 @@ private struct WorkoutRow: View {
                 RoundedRectangle(cornerRadius: 14)
                     .fill(workout.isFromAdidas ? Color.blue.opacity(0.25) : Color.phoenixOrange.opacity(0.22))
                 Image(systemName: workout.activityName == "Course" ? "figure.run" : "figure.mixed.cardio")
-                    .foregroundStyle(workout.isFromAdidas ? .blue : .phoenixOrange)
+                    .foregroundStyle(workout.isFromAdidas ? Color.blue : Color.phoenixOrange)
             }
             .frame(width: 48, height: 48)
 
@@ -52,7 +52,7 @@ private struct WorkoutRow: View {
                     .foregroundStyle(.secondary)
                 Text(workout.sourceName)
                     .font(.caption2)
-                    .foregroundStyle(workout.isFromAdidas ? .blue : .secondary)
+                    .foregroundStyle(workout.isFromAdidas ? Color.blue : Color.secondary)
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 3) {
@@ -98,14 +98,14 @@ struct WorkoutDetailView: View {
                         if health.routePoints.count > 1 {
                             Map(position: $mapPosition) {
                                 MapPolyline(coordinates: health.routePoints.map(\.coordinate))
-                                    .stroke(.phoenixOrange, lineWidth: 5)
+                                    .stroke(Color.phoenixOrange, lineWidth: 5)
                                 if let first = health.routePoints.first {
                                     Marker("Départ", systemImage: "flag.fill", coordinate: first.coordinate)
-                                        .tint(.green)
+                                        .tint(Color.green)
                                 }
                                 if let last = health.routePoints.last {
                                     Marker("Arrivée", systemImage: "flag.checkered", coordinate: last.coordinate)
-                                        .tint(.phoenixOrange)
+                                        .tint(Color.phoenixOrange)
                                 }
                             }
                             .mapStyle(.standard(elevation: .realistic))
