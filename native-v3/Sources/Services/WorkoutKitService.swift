@@ -5,7 +5,7 @@ import WorkoutKit
 
 @MainActor
 final class WorkoutKitService: ObservableObject {
-    @Published var statusMessage = "Prêt à envoyer la séance vers l’Apple Watch."
+    @Published var statusMessage = "Prêt à synchroniser la séance avec l’Apple Watch."
     @Published var isWorking = false
 
     func openTodayOnWatch() async {
@@ -13,17 +13,22 @@ final class WorkoutKitService: ObservableObject {
         defer { isWorking = false }
 
         guard WorkoutScheduler.isSupported else {
-            statusMessage = "La programmation de séances n’est pas prise en charge sur cet appareil."
+            statusMessage = "La synchronisation des séances n’est pas prise en charge sur cet appareil."
             return
         }
 
-        do {
-            let plan = makeWorkoutPlan(from: DailyPlan.plan())
-            try await plan.openInWorkoutApp()
-            statusMessage = "La séance a été ouverte dans l’app Exercice de l’Apple Watch."
-        } catch {
-            statusMessage = "Impossible d’ouvrir la séance sur la montre : \(error.localizedDescription)"
+        let scheduler = WorkoutScheduler.shared
+        let authorization = await scheduler.requestAuthorization()
+        guard authorization == .authorized else {
+            statusMessage = "Autorise Project Phoenix à programmer les entraînements dans les réglages."
+            return
         }
+
+        let workoutPlan = makeWorkoutPlan(from: DailyPlan.plan())
+        let date = Calendar.current.date(byAdding: .minute, value: 2, to: .now) ?? .now
+        let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        await scheduler.schedule(workoutPlan, at: components)
+        statusMessage = "Séance envoyée. Ouvre l’app Exercice sur l’Apple Watch : elle apparaît dans les séances programmées."
     }
 
     func scheduleToday() async {
