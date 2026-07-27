@@ -119,7 +119,11 @@ final class HealthKitService: ObservableObject {
     }
 
     private func queryWorkouts() async throws -> [WorkoutSummary] {
-        try await withCheckedThrowingContinuation { continuation in
+        let distanceType = self.distanceType
+        let energyType = self.energyType
+        let heartRateType = self.heartRateType
+
+        return try await withCheckedThrowingContinuation { continuation in
             let start = Calendar.current.date(byAdding: .month, value: -6, to: .now)!
             let predicate = HKQuery.predicateForSamples(withStart: start, end: .now, options: .strictEndDate)
             let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
@@ -134,9 +138,9 @@ final class HealthKitService: ObservableObject {
 
                 for workout in hkWorkouts {
                     lookup[workout.uuid] = workout
-                    let distance = workout.statistics(for: self?.distanceType ?? HKQuantityType(.distanceWalkingRunning))?.sumQuantity()?.doubleValue(for: .meterUnit(with: .kilo)) ?? 0
-                    let calories = workout.statistics(for: self?.energyType ?? HKQuantityType(.activeEnergyBurned))?.sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
-                    let averageHR = workout.statistics(for: self?.heartRateType ?? HKQuantityType(.heartRate))?.averageQuantity()?.doubleValue(for: HKUnit.count().unitDivided(by: .minute()))
+                    let distance = workout.statistics(for: distanceType)?.sumQuantity()?.doubleValue(for: .meterUnit(with: .kilo)) ?? 0
+                    let calories = workout.statistics(for: energyType)?.sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
+                    let averageHR = workout.statistics(for: heartRateType)?.averageQuantity()?.doubleValue(for: HKUnit.count().unitDivided(by: .minute()))
                     let source = workout.sourceRevision.source.name
                     let normalized = source.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
                     summaries.append(WorkoutSummary(
@@ -190,9 +194,9 @@ final class HealthKitService: ObservableObject {
             let query = HKSampleQuery(sampleType: sleepType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, error in
                 if let error { continuation.resume(throwing: error); return }
                 let seconds = (samples as? [HKCategorySample] ?? []).reduce(0.0) { total, sample in
-                    let value = HKCategoryValueSleepAnalysis(rawValue: sample.value)
-                    let asleep = value != .awake && value != .inBed
-                    return total + (asleep ? sample.endDate.timeIntervalSince(sample.startDate) : 0)
+                    let isAwake = sample.value == HKCategoryValueSleepAnalysis.awake.rawValue
+                    let isInBed = sample.value == HKCategoryValueSleepAnalysis.inBed.rawValue
+                    return total + ((!isAwake && !isInBed) ? sample.endDate.timeIntervalSince(sample.startDate) : 0)
                 }
                 continuation.resume(returning: seconds / 3600)
             }
@@ -213,12 +217,21 @@ final class HealthKitService: ObservableObject {
         guard let route = routeSamples.first else { return [] }
         return try await withCheckedThrowingContinuation { continuation in
             var all: [RoutePoint] = []
+            var finished = false
             let query = HKWorkoutRouteQuery(route: route) { _, locations, done, error in
-                if let error { continuation.resume(throwing: error); return }
+                guard !finished else { return }
+                if let error {
+                    finished = true
+                    continuation.resume(throwing: error)
+                    return
+                }
                 for location in locations ?? [] {
                     all.append(RoutePoint(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude, altitude: location.altitude, timestamp: location.timestamp))
                 }
-                if done { continuation.resume(returning: all) }
+                if done {
+                    finished = true
+                    continuation.resume(returning: all)
+                }
             }
             store.execute(query)
         }
