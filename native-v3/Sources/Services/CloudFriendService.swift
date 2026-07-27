@@ -1,5 +1,6 @@
 import CloudKit
 import Foundation
+import Combine
 
 @MainActor
 final class CloudFriendService: ObservableObject {
@@ -35,14 +36,14 @@ final class CloudFriendService: ObservableObject {
             record = CKRecord(recordType: "PhoenixProfile", recordID: recordID)
         }
 
-        record["inviteCode"] = inviteCode as CKRecordValue
-        record["nickname"] = nickname as CKRecordValue
-        record["completedWorkouts"] = completedWorkouts as CKRecordValue
-        record["currentStreak"] = currentStreak as CKRecordValue
-        record["weeklyMinutes"] = weeklyMinutes as CKRecordValue
-        record["updatedAt"] = Date() as CKRecordValue
+        record["inviteCode"] = inviteCode as NSString
+        record["nickname"] = nickname as NSString
+        record["completedWorkouts"] = NSNumber(value: completedWorkouts)
+        record["currentStreak"] = NSNumber(value: currentStreak)
+        record["weeklyMinutes"] = NSNumber(value: weeklyMinutes)
+        record["updatedAt"] = Date() as NSDate
         if let lastWorkoutDate {
-            record["lastWorkoutDate"] = lastWorkoutDate as CKRecordValue
+            record["lastWorkoutDate"] = lastWorkoutDate as NSDate
         }
 
         do {
@@ -82,9 +83,9 @@ final class CloudFriendService: ObservableObject {
                 loaded.append(FriendSnapshot(
                     inviteCode: record["inviteCode"] as? String ?? code,
                     nickname: record["nickname"] as? String ?? "Ami Phoenix",
-                    completedWorkouts: record["completedWorkouts"] as? Int ?? 0,
-                    currentStreak: record["currentStreak"] as? Int ?? 0,
-                    weeklyMinutes: record["weeklyMinutes"] as? Int ?? 0,
+                    completedWorkouts: (record["completedWorkouts"] as? NSNumber)?.intValue ?? 0,
+                    currentStreak: (record["currentStreak"] as? NSNumber)?.intValue ?? 0,
+                    weeklyMinutes: (record["weeklyMinutes"] as? NSNumber)?.intValue ?? 0,
                     lastWorkoutDate: record["lastWorkoutDate"] as? Date,
                     updatedAt: record["updatedAt"] as? Date ?? .distantPast
                 ))
