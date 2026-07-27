@@ -1,0 +1,5 @@
+ProjectPhoenixV3.xcodeproj/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+xcodebuild.log
